@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kasatria - Data Visualization</title>
+    <title>Kasatria</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
     <style>
@@ -47,6 +47,9 @@
         .legend {
             display: flex;
             gap: 20px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .legend-item {
@@ -280,7 +283,7 @@
     <!-- Login Screen -->
     <div id="loginScreen">
         <div class="login-container">
-            <div class="login-title">Kasatria Data Visualization</div>
+            <div class="login-title">Kasatria</div>
             <div class="login-subtitle">
                 Please sign in with your Google account to access the data visualization dashboard.
                 This ensures secure access to the data and personalized experience.
@@ -302,7 +305,7 @@
     <!-- Main Application (hidden until login) -->
     <div id="appContainer" style="display: none;">
         <div id="header">
-            <div id="title">Kasatria - Data Visualization</div>
+            <div id="title">Kasatria</div>
             <div class="legend">
                 <div class="legend-item">
                     <div class="color-box" style="background-color: #EF3022;"></div>
