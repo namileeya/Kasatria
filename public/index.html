@@ -271,42 +271,6 @@
         .g-signin2 {
             margin: 20px auto;
         }
-
-        #userInfo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            position: absolute;
-            right: 20px;
-            top: 15px;
-        }
-
-        #userPhoto {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            border: 2px solid #4fc3f7;
-        }
-
-        #userName {
-            font-size: 14px;
-            color: white;
-        }
-
-        #logoutBtn {
-            background: rgba(255, 59, 48, 0.2);
-            color: #ff3b30;
-            border: 1px solid #ff3b30;
-            padding: 5px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-
-        #logoutBtn:hover {
-            background: rgba(255, 59, 48, 0.4);
-        }
     </style>
     <!-- Load Google Sign-In API -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -352,11 +316,6 @@
                     <div class="color-box" style="background-color: #3A9F48;"></div>
                     <span>Net Worth > $200K</span>
                 </div>
-            </div>
-            <div id="userInfo">
-                <img id="userPhoto" src="" alt="User Photo">
-                <span id="userName"></span>
-                <button id="logoutBtn" onclick="signOut()">Logout</button>
             </div>
         </div>
 
@@ -429,10 +388,6 @@
                     token: response.credential
                 };
 
-                // Update UI with user info
-                document.getElementById('userPhoto').src = currentUser.picture;
-                document.getElementById('userName').textContent = currentUser.name;
-
                 // Hide login screen, show app
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'block';
@@ -480,10 +435,6 @@
             document.getElementById('appContainer').style.display = 'none';
             document.getElementById('loginScreen').style.display = 'flex';
 
-            // Clear user info display
-            document.getElementById('userPhoto').src = '';
-            document.getElementById('userName').textContent = '';
-
             // Google Sign-Out
             google.accounts.id.disableAutoSelect();
             google.accounts.id.revoke(localStorage.getItem('userEmail'), done => {
@@ -505,8 +456,6 @@
                 };
 
                 if (currentUser.name && currentUser.picture) {
-                    document.getElementById('userPhoto').src = currentUser.picture;
-                    document.getElementById('userName').textContent = currentUser.name;
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('appContainer').style.display = 'block';
                     return true;
