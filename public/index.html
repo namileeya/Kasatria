@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasatria - Data Visualization</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
+            background: rgba(10, 20, 40, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(0, 150, 255, 0.3);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #4fc3f7;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .color-box {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        #container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 10, 20, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 0 40px rgba(0, 100, 200, 0.3);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(79, 195, 247, 0.3);
+            border-top: 4px solid #4fc3f7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .data-tile {
+            width: 160px;
+            height: 220px;
+            background: linear-gradient(135deg, rgba(40, 40, 50, 0.95), rgba(30, 30, 40, 0.98));
+            border-radius: 0;
+            padding: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            border: 4px solid;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .data-tile:hover {
+            transform: scale(1.08);
+            z-index: 1000 !important;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9);
+        }
+
+        .tile-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .tile-country {
+            text-transform: uppercase;
+        }
+
+        .tile-age {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .tile-photo {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .tile-photo img {
+            width: 80px;
+            height: 80px;
+            border-radius: 0;
+            object-fit: cover;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .tile-footer {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px 8px;
+            text-align: center;
+        }
+
+        .tile-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 5px;
+            line-height: 1.3;
+            word-wrap: break-word;
+        }
+
+        .tile-interest {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            font-style: italic;
+            line-height: 1.3;
+            word-wrap: break-word;
+        }
+
+        #status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        #menu {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        #menu button {
+            color: rgba(79, 195, 247, 0.75);
+            background: rgba(0, 20, 40, 0.8);
+            outline: 1px solid rgba(79, 195, 247, 0.75);
+            border: 0px;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        #menu button:hover {
+            background-color: rgba(79, 195, 247, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 195, 247, 0.4);
+        }
+
+        #menu button:active {
+            color: #000000;
+            background-color: rgba(79, 195, 247, 0.75);
+        }
+
+        /* Login screen styles */
+        #loginScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 20, 0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-container {
+            background: rgba(20, 30, 50, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(0, 100, 200, 0.3);
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4fc3f7;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+        }
+
+        .login-subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .g-signin2 {
+            margin: 20px auto;
+        }
+
+        #userInfo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+        }
+
+        #userPhoto {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid #4fc3f7;
+        }
+
+        #userName {
+            font-size: 14px;
+            color: white;
+        }
+
+        #logoutBtn {
+            background: rgba(255, 59, 48, 0.2);
+            color: #ff3b30;
+            border: 1px solid #ff3b30;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        #logoutBtn:hover {
+            background: rgba(255, 59, 48, 0.4);
+        }
+    </style>
+    <!-- Load Google Sign-In API -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen">
+        <div class="login-container">
+            <div class="login-title">Kasatria Data Visualization</div>
+            <div class="login-subtitle">
+                Please sign in with your Google account to access the data visualization dashboard.
+                This ensures secure access to the data and personalized experience.
+            </div>
+            <div id="g_id_onload"
+                data-client_id="93544750481-ge0v92dbdqco8idg002o86nl0l9rbg58.apps.googleusercontent.com"
+                data-context="signin" data-ux_mode="popup" data-callback="handleCredentialResponse"
+                data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin" data-type="standard" data-shape="rectangular" data-theme="outline"
+                data-text="signin_with" data-size="large" data-logo_alignment="left">
+            </div>
+            <div style="margin-top: 20px; font-size: 12px; color: rgba(255, 255, 255, 0.6);">
+                You need a Google account to access this application
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application (hidden until login) -->
+    <div id="appContainer" style="display: none;">
+        <div id="header">
+            <div id="title">Kasatria - Data Visualization</div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="color-box" style="background-color: #EF3022;"></div>
+                    <span>Net Worth ≤ $100K</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box" style="background-color: #FDCA35;"></div>
+                    <span>$100K < Worth ≤ $200K</span>
+                </div>
+                <div class="legend-item">
+                    <div class="color-box" style="background-color: #3A9F48;"></div>
+                    <span>Net Worth > $200K</span>
+                </div>
+            </div>
+            <div id="userInfo">
+                <img id="userPhoto" src="" alt="User Photo">
+                <span id="userName"></span>
+                <button id="logoutBtn" onclick="signOut()">Logout</button>
+            </div>
+        </div>
+
+        <div id="container"></div>
+        <div id="status"></div>
+
+        <div id="menu">
+            <button id="table">TABLE</button>
+            <button id="sphere">SPHERE</button>
+            <button id="helix">HELIX</button>
+            <button id="grid">GRID</button>
+        </div>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <div>Loading data from Google Sheets...</div>
+        </div>
+    </div>
+
+    <!-- Load Three.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TrackballControls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS3DRenderer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+
+    <script>
+        // ===== GOOGLE SIGN-IN CONFIGURATION =====
+        const GOOGLE_CLIENT_ID = '93544750481-ge0v92dbdqco8idg002o86nl0l9rbg58.apps.googleusercontent.com';
+
+        // ===== APPLICATION CONFIGURATION =====
+        const CONFIG = {
+            SHEET_ID: '12onIDXpAMqSTQpP3fRJv84IMWELXepiRGnXUOGP1_xs',
+            SHEET_NAME: 'Data Template',
+            COLORS: {
+                LOW: '#EF3022',      // ≤ $100,000
+                MEDIUM: '#FDCA35',   // > $100,000 AND ≤ $200,000
+                HIGH: '#3A9F48'      // > $200,000
+            },
+            // Grid dimensions from your image: 5x4x10
+            GRID_DIMENSIONS: {
+                X: 5,  // columns
+                Y: 4,  // rows
+                Z: 10  // layers
+            }
+        };
+
+        // Get CSV URL
+        const CSV_URL = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CONFIG.SHEET_NAME)}`;
+
+        // Global variables
+        let camera, scene, renderer, controls;
+        let objects = [];
+        let targets = { table: [], sphere: [], helix: [], grid: [] };
+        let currentUser = null;
+
+        // ===== GOOGLE SIGN-IN FUNCTIONS =====
+        function handleCredentialResponse(response) {
+            console.log('Google Sign-In response:', response);
+
+            if (response.credential) {
+                // Decode the JWT token to get user info
+                const userData = parseJwt(response.credential);
+                console.log('User data:', userData);
+
+                // Store user info
+                currentUser = {
+                    name: userData.name,
+                    email: userData.email,
+                    picture: userData.picture,
+                    token: response.credential
+                };
+
+                // Update UI with user info
+                document.getElementById('userPhoto').src = currentUser.picture;
+                document.getElementById('userName').textContent = currentUser.name;
+
+                // Hide login screen, show app
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+
+                // Initialize the application
+                updateStatus(`Welcome, ${currentUser.name}!`);
+                setTimeout(() => {
+                    initializeApp();
+                }, 500);
+
+                // Store login state
+                localStorage.setItem('userLoggedIn', 'true');
+                localStorage.setItem('userName', currentUser.name);
+                localStorage.setItem('userEmail', currentUser.email);
+                localStorage.setItem('userPicture', currentUser.picture);
+            }
+        }
+
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+
+                return JSON.parse(jsonPayload);
+            } catch (error) {
+                console.error('Error parsing JWT:', error);
+                return null;
+            }
+        }
+
+        function signOut() {
+            // Clear user data
+            currentUser = null;
+
+            // Clear localStorage
+            localStorage.removeItem('userLoggedIn');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userPicture');
+
+            // Show login screen, hide app
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+
+            // Clear user info display
+            document.getElementById('userPhoto').src = '';
+            document.getElementById('userName').textContent = '';
+
+            // Google Sign-Out
+            google.accounts.id.disableAutoSelect();
+            google.accounts.id.revoke(localStorage.getItem('userEmail'), done => {
+                console.log('Google Sign-Out completed');
+            });
+
+            updateStatus('Logged out');
+        }
+
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+
+            if (isLoggedIn) {
+                // Restore user from localStorage
+                currentUser = {
+                    name: localStorage.getItem('userName'),
+                    email: localStorage.getItem('userEmail'),
+                    picture: localStorage.getItem('userPicture')
+                };
+
+                if (currentUser.name && currentUser.picture) {
+                    document.getElementById('userPhoto').src = currentUser.picture;
+                    document.getElementById('userName').textContent = currentUser.name;
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('appContainer').style.display = 'block';
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // ===== MAIN APPLICATION INITIALIZATION =====
+        async function initializeApp() {
+            console.log('🚀 Initializing Kasatria Visualization...');
+            updateStatus('Initializing...');
+
+            try {
+                // 1. Load data from Google Sheets
+                updateStatus('Loading data from Google Sheets...');
+                const data = await loadGoogleSheetsData();
+
+                if (!data || data.length === 0) {
+                    throw new Error('No data loaded from Google Sheets');
+                }
+
+                // 2. Initialize Three.js
+                updateStatus('Setting up 3D visualization...');
+                initThreeJS();
+
+                // 3. Create data tiles
+                updateStatus(`Creating ${data.length} data tiles...`);
+                createDataTiles(data);
+
+                // 4. Setup layouts
+                updateStatus('Setting up layouts...');
+                setupLayouts(data.length);
+
+                // 5. Setup event listeners for layout buttons
+                setupEventListeners();
+
+                // 6. Hide loading screen
+                document.getElementById('loading').style.display = 'none';
+                updateStatus(`✅ Ready! Displaying ${data.length} records for ${currentUser.name}`);
+
+                // 7. Start with table layout
+                transform(targets.table, 2000);
+
+                // 8. Start animation loop
+                animate();
+
+            } catch (error) {
+                console.error('❌ Initialization failed:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="color:#ff4444; margin-bottom:15px; font-size:18px;">❌ Error</div>
+                    <div style="color:#ff8888; margin-bottom:20px;">${error.message}</div>
+                    <div style="color:#aaa; font-size:12px;">
+                        Check: <br>
+                        1. Google Sheet sharing permissions<br>
+                        2. Sheet name is "Data Template"<br>
+                        3. Internet connection<br>
+                        4. Browser console (F12) for details
+                    </div>
+                `;
+                updateStatus(`❌ Error: ${error.message}`);
+            }
+        }
+
+        // ===== LOAD DATA FROM GOOGLE SHEETS =====
+        async function loadGoogleSheetsData() {
+            console.log('📥 Fetching data from:', CSV_URL);
+
+            try {
+                const response = await fetch(CSV_URL);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: Cannot access Google Sheet`);
+                }
+
+                const csvText = await response.text();
+                console.log('📄 CSV received, length:', csvText.length);
+
+                // Parse CSV
+                const rows = csvText.split('\n').filter(row => row.trim() !== '');
+
+                if (rows.length < 2) {
+                    throw new Error('No data rows found in sheet');
+                }
+
+                // Parse headers (first row)
+                const headers = rows[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+                console.log('📋 Headers:', headers);
+
+                // Parse data rows (skip header)
+                const data = [];
+                for (let i = 1; i < Math.min(rows.length, 201); i++) { // Max 200 rows
+                    const row = rows[i];
+
+                    // Parse CSV row properly (handling commas in values)
+                    const cells = parseCSVRow(row);
+                    const record = {
+                        id: i,
+                        name: '',
+                        age: 0,
+                        country: '',
+                        interest: '',
+                        photo: '',
+                        netWorth: 0
+                    };
+
+                    // Map cells to headers
+                    headers.forEach((header, index) => {
+                        const value = cells[index] || '';
+                        const headerLower = header.toLowerCase();
+
+                        if (headerLower.includes('name')) {
+                            record.name = value;
+                        } else if (headerLower.includes('age')) {
+                            record.age = parseInt(value) || 0;
+                        } else if (headerLower.includes('country')) {
+                            record.country = value;
+                        } else if (headerLower.includes('interest')) {
+                            record.interest = value;
+                        } else if (headerLower.includes('photo')) {
+                            record.photo = value;
+                        } else if (headerLower.includes('net') && headerLower.includes('worth')) {
+                            record.netWorth = parseNetWorth(value);
+                        }
+                    });
+
+                    data.push(record);
+                }
+
+                console.log(`✅ Loaded ${data.length} data records`);
+                return data;
+
+            } catch (error) {
+                console.error('❌ Failed to load Google Sheets data:', error);
+                throw error;
+            }
+        }
+
+        // ===== NET WORTH PARSING =====
+        function parseNetWorth(value) {
+            if (!value || value.trim() === '') return 0;
+
+            let cleanValue = value.toString().trim();
+            cleanValue = cleanValue.replace(/[$,]/g, '');
+            const parsed = parseFloat(cleanValue);
+
+            if (isNaN(parsed)) {
+                console.warn(`⚠️ Could not parse net worth: "${value}" -> NaN`);
+                return 0;
+            }
+
+            return parsed;
+        }
+
+        // ===== CSV PARSING HELPER =====
+        function parseCSVRow(row) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < row.length; i++) {
+                const char = row[i];
+                const nextChar = row[i + 1];
+
+                if (char === '"' && !inQuotes) {
+                    inQuotes = true;
+                } else if (char === '"' && inQuotes && nextChar === '"') {
+                    current += '"';
+                    i++;
+                } else if (char === '"' && inQuotes) {
+                    inQuotes = false;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+
+            result.push(current);
+            return result.map(cell => cell.trim().replace(/^"|"$/g, ''));
+        }
+
+        // ===== COLOR CODING HELPER =====
+        function getColorForNetWorth(netWorth) {
+            if (netWorth > 200000) {
+                return CONFIG.COLORS.HIGH;
+            } else if (netWorth > 100000) {
+                return CONFIG.COLORS.MEDIUM;
+            } else {
+                return CONFIG.COLORS.LOW;
+            }
+        }
+
+        // ===== GET COUNTRY CODE =====
+        function getCountryCode(countryName) {
+            const countryMap = {
+                'Malaysia': 'MY',
+                'Singapore': 'SG',
+                'Indonesia': 'ID',
+                'Thailand': 'TH',
+                'Vietnam': 'VN',
+                'Philippines': 'PH',
+                'United States': 'US',
+                'United Kingdom': 'UK',
+                'Australia': 'AU',
+                'Canada': 'CA'
+            };
+
+            return countryMap[countryName] || (countryName ? countryName.substring(0, 2).toUpperCase() : 'NA');
+        }
+
+        // ===== INITIALIZE THREE.JS =====
+        function initThreeJS() {
+            camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
+            camera.position.z = 3000;
+
+            scene = new THREE.Scene();
+
+            renderer = new THREE.CSS3DRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            controls = new THREE.TrackballControls(camera, renderer.domElement);
+            controls.rotateSpeed = 1.0;
+            controls.zoomSpeed = 1.2;
+            controls.panSpeed = 0.8;
+            controls.minDistance = 500;
+            controls.maxDistance = 6000;
+
+            console.log('✅ Three.js initialized');
+        }
+
+        // ===== CREATE DATA TILES =====
+        function createDataTiles(data) {
+            objects = [];
+
+            data.forEach((record, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'data-tile';
+
+                const borderColor = getColorForNetWorth(record.netWorth);
+                tile.style.borderColor = borderColor;
+
+                // Set solid background with subtle color tint matching border
+                tile.style.backgroundColor = borderColor + '20'; // 20 = 12.5% opacity
+
+                tile.innerHTML = `
+                    <div class="tile-header">
+                        <div class="tile-country">${getCountryCode(record.country)}</div>
+                        <div class="tile-age">${record.age || 'N/A'}</div>
+                    </div>
+                    <div class="tile-photo">
+                        <img src="${getPhotoUrl(record)}" alt="${record.name || 'Person'}" 
+                             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(record.name?.charAt(0) || 'P')}&background=333&color=fff&size=80'">
+                    </div>
+                    <div class="tile-footer">
+                        <div class="tile-name">${record.name || 'Unknown Name'}</div>
+                        <div class="tile-interest">${record.interest || 'No interest specified'}</div>
+                    </div>
+                `;
+
+                const object = new THREE.CSS3DObject(tile);
+
+                // Random initial positions
+                object.position.x = Math.random() * 4000 - 2000;
+                object.position.y = Math.random() * 4000 - 2000;
+                object.position.z = Math.random() * 4000 - 2000;
+
+                scene.add(object);
+                objects.push(object);
+            });
+
+            console.log(`✅ Created ${objects.length} data tiles`);
+        }
+
+        // ===== SETUP LAYOUTS =====
+        function setupLayouts(totalItems) {
+            // Clear all existing targets
+            targets = { table: [], sphere: [], helix: [], grid: [] };
+
+            // Setup table layout (20x10 grid like original code)
+            setupTableLayout(totalItems);
+
+            // Setup sphere layout
+            setupSphereLayout(totalItems);
+
+            // Setup helix layout (PROPER double helix)
+            setupHelixLayout(totalItems);
+
+            // Setup 3D grid layout (5x4x10 from your image)
+            setupGridLayout(totalItems);
+        }
+
+        function setupTableLayout(totalItems) {
+            const COLS = 20;
+            const ROWS = Math.ceil(totalItems / COLS);
+            const TILE_WIDTH = 170;
+            const TILE_HEIGHT = 230;
+
+            const totalWidth = COLS * TILE_WIDTH;
+            const totalHeight = ROWS * TILE_HEIGHT;
+            const startX = -totalWidth / 2 + TILE_WIDTH / 2;
+            const startY = totalHeight / 2 - TILE_HEIGHT / 2;
+
+            for (let i = 0; i < totalItems; i++) {
+                const col = i % COLS;
+                const row = Math.floor(i / COLS);
+
+                const object = new THREE.Object3D();
+                object.position.x = startX + (col * TILE_WIDTH);
+                object.position.y = startY - (row * TILE_HEIGHT);
+                object.position.z = 0;
+
+                targets.table.push(object);
+            }
+        }
+
+        function setupSphereLayout(totalItems) {
+            const vector = new THREE.Vector3();
+
+            for (let i = 0; i < totalItems; i++) {
+                const phi = Math.acos(-1 + (2 * i) / totalItems);
+                const theta = Math.sqrt(totalItems * Math.PI) * phi;
+
+                const object = new THREE.Object3D();
+                object.position.setFromSphericalCoords(1200, phi, theta);
+
+                vector.copy(object.position).multiplyScalar(2);
+                object.lookAt(vector);
+
+                targets.sphere.push(object);
+            }
+        }
+
+        function setupHelixLayout(totalItems) {
+            // Double helix configuration
+            const helixRadius = 500;
+            const helixHeight = 2000;
+            const helixTurns = 3;
+            const verticalSpacing = 100;
+
+            // Create two interwoven helices
+            for (let i = 0; i < totalItems; i++) {
+                const object = new THREE.Object3D();
+
+                // Determine which helix (0 or 1) and position in that helix
+                const helix = i % 2; // 0 for first helix, 1 for second helix
+                const positionInHelix = Math.floor(i / 2);
+
+                // Calculate vertical position - second helix slightly offset vertically
+                const y = -helixHeight / 2 + (positionInHelix * verticalSpacing) + (helix * verticalSpacing * 0.3);
+
+                // Calculate angle around the center
+                // Each helix has its own starting angle (offset by π radians = 180 degrees)
+                const angle = helixTurns * 2 * Math.PI * (positionInHelix / Math.ceil(totalItems / 2)) + (helix * Math.PI);
+
+                // Calculate position
+                object.position.x = Math.cos(angle) * helixRadius;
+                object.position.y = y;
+                object.position.z = Math.sin(angle) * helixRadius;
+
+                // Make the tile face outward from the helix
+                // Calculate a point further out in the same radial direction
+                const outwardX = Math.cos(angle) * (helixRadius + 100);
+                const outwardZ = Math.sin(angle) * (helixRadius + 100);
+
+                // Create look at target
+                const lookAtTarget = new THREE.Vector3(outwardX, y, outwardZ);
+                object.lookAt(lookAtTarget);
+
+                targets.helix.push(object);
+            }
+
+            console.log(`✅ Double helix layout created with ${totalItems} items`);
+        }
+
+        function setupGridLayout(totalItems) {
+            const { X: cols, Y: rows, Z: layers } = CONFIG.GRID_DIMENSIONS;
+            const spacing = 300; // Increased spacing for 3D grid
+
+            // Calculate total items that can fit in 5x4x10 grid
+            const maxItems = cols * rows * layers;
+            const itemsToShow = Math.min(totalItems, maxItems);
+
+            for (let i = 0; i < itemsToShow; i++) {
+                const col = i % cols;
+                const row = Math.floor((i / cols) % rows);
+                const layer = Math.floor(i / (cols * rows));
+
+                const object = new THREE.Object3D();
+                object.position.x = (col * spacing) - ((cols - 1) * spacing / 2);
+                object.position.y = (row * -spacing) + ((rows - 1) * spacing / 2);
+                object.position.z = (layer * -spacing) + ((layers - 1) * spacing / 2);
+
+                targets.grid.push(object);
+            }
+
+            // Add remaining items if totalItems > maxItems
+            for (let i = itemsToShow; i < totalItems; i++) {
+                const object = new THREE.Object3D();
+                object.position.x = 0;
+                object.position.y = 0;
+                object.position.z = 0;
+                targets.grid.push(object);
+            }
+
+            console.log(`✅ Grid layout: ${cols}x${rows}x${layers} (${itemsToShow} items positioned)`);
+        }
+
+        // ===== SETUP EVENT LISTENERS =====
+        function setupEventListeners() {
+            document.getElementById('table').addEventListener('click', function () {
+                updateStatus('Switching to Table layout...');
+                transform(targets.table, 2000);
+            });
+
+            document.getElementById('sphere').addEventListener('click', function () {
+                updateStatus('Switching to Sphere layout...');
+                transform(targets.sphere, 2000);
+            });
+
+            document.getElementById('helix').addEventListener('click', function () {
+                updateStatus('Switching to Double Helix layout...');
+                transform(targets.helix, 2000);
+            });
+
+            document.getElementById('grid').addEventListener('click', function () {
+                updateStatus('Switching to 3D Grid layout...');
+                transform(targets.grid, 2000);
+            });
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // ===== ANIMATION FUNCTIONS =====
+        function transform(targetsArray, duration) {
+            TWEEN.removeAll();
+
+            for (let i = 0; i < objects.length; i++) {
+                const object = objects[i];
+                const target = targetsArray[i];
+
+                if (target) {
+                    new TWEEN.Tween(object.position)
+                        .to({
+                            x: target.position.x,
+                            y: target.position.y,
+                            z: target.position.z
+                        }, Math.random() * duration + duration)
+                        .easing(TWEEN.Easing.Exponential.InOut)
+                        .start();
+
+                    new TWEEN.Tween(object.rotation)
+                        .to({
+                            x: target.rotation.x,
+                            y: target.rotation.y,
+                            z: target.rotation.z
+                        }, Math.random() * duration + duration)
+                        .easing(TWEEN.Easing.Exponential.InOut)
+                        .start();
+                }
+            }
+
+            new TWEEN.Tween({})
+                .to({}, duration * 2)
+                .onUpdate(render)
+                .start();
+        }
+
+        function onWindowResize() {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                render();
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            TWEEN.update();
+            if (controls) controls.update();
+            render();
+        }
+
+        function render() {
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        // ===== HELPER FUNCTIONS =====
+        function getPhotoUrl(record) {
+            if (record.photo && record.photo.trim() !== '' &&
+                (record.photo.startsWith('http') || record.photo.startsWith('data:'))) {
+                return record.photo;
+            }
+
+            const initials = record.name
+                ? record.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+                : 'PN';
+
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=333&color=fff&size=120`;
+        }
+
+        function updateStatus(message) {
+            const statusEl = document.getElementById('status');
+            if (statusEl) {
+                statusEl.textContent = message;
+            }
+            console.log('📢 Status:', message);
+        }
+
+        // ===== INITIALIZE ON PAGE LOAD =====
+        window.addEventListener('DOMContentLoaded', function () {
+            // First check if user is already logged in
+            if (checkLoginStatus()) {
+                // User is already logged in, initialize app
+                initializeApp();
+            } else {
+                // Show login screen
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('appContainer').style.display = 'none';
+
+                // Initialize Google Sign-In
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: handleCredentialResponse
+                });
+
+                google.accounts.id.renderButton(
+                    document.querySelector(".g_id_signin"),
+                    { theme: "outline", size: "large" }
+                );
+
+                google.accounts.id.prompt();
+            }
+        });
+
+    </script>
+</body>
+
+</html>
